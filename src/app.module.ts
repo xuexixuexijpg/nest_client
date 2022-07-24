@@ -1,56 +1,15 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as moment from 'moment';
-import { utilities, WinstonModule } from 'nest-winston';
-import { join } from 'path';
-import * as winston from 'winston';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HelloMiddleware } from './hello/middleware/hello.middleware';
 import { HelloModule } from './hello/hello.module';
+import { mongodbConfig } from './common/config/dbConfig';
+import loggerOptions from './common/config/loggerConfig';
+import { WinstonModule } from 'nest-winston';
 
 @Module({
-  imports: [
-    HelloModule,
-    TypeOrmModule.forRoot({
-      type: 'mongodb',
-      database: 'hello',
-      username: 'root',
-      password: '123456',
-      host: 'localhost', //如果是线上找运维拿地址
-      port: 27017,
-      autoLoadEntities: true,
-      synchronize: true, //线上建议不要开启
-    }),
-    WinstonModule.forRoot({
-      transports: [
-        //控制台
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.ms(),
-            utilities.format.nestLike('MyApp', {
-              // options
-            }),
-          ),
-        }),
-        //文件
-        new winston.transports.File({
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.ms(),
-            utilities.format.nestLike('MyApp', {
-              // options
-            }),
-          ),
-          //当前根目录
-          filename: join(process.cwd(), `nest-${moment().format('MM-DD')}.log`),
-        }),
-        // other transports...
-      ],
-      // other options
-    }),
-  ],
+  imports: [HelloModule, TypeOrmModule.forRoot(mongodbConfig), WinstonModule.forRoot(loggerOptions)],
   //引入hello模块就可以使用helloe模块中导出的服务
   controllers: [AppController],
   providers: [AppService],
